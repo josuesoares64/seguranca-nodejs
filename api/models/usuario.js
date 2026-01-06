@@ -1,30 +1,43 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  class Usuario extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class usuario extends Model {
     static associate(models) {
-      // define association here
+      // usuario ↔ roles
+      usuario.belongsToMany(models.roles, {
+        through: 'usuarios_roles',
+        as: 'roles',
+        foreignKey: 'usuario_id'
+      });
+
+      // usuario ↔ permissoes
+      usuario.belongsToMany(models.permissoes, {
+        through: 'usuarios_permissoes',
+        as: 'permissoes',
+        foreignKey: 'usuario_id'
+      });
     }
   }
-  Usuario.init({
-    nome: DataTypes.STRING,
-    email: DataTypes.STRING,
-    senha: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'Usuario',
-    defaultScope: {
-      attributes: {
-        exclude: ['senha']
-      }
+
+  usuario.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        primaryKey: true
+      },
+      nome: DataTypes.STRING,
+      email: DataTypes.STRING,
+      senha: DataTypes.STRING
+    },
+    {
+      sequelize,
+      modelName: 'usuario',
+      tableName: 'Usuarios',     // ✅ NOME REAL DA TABELA
+      freezeTableName: true,     // ✅ NÃO pluraliza automaticamente
+      timestamps: true           // (default, mas bom deixar explícito)
     }
-  });
-  return Usuario;
+  );
+
+  return usuario;
 };

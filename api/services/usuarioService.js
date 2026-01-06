@@ -5,34 +5,28 @@ const { v4: uuidv4 } = require('uuid')
 class UsuarioService {
 
   async cadastrar(dto) {
-    const usuario = await database.Usuario.findOne({
-      where: {
-        email: dto.email
-      }
+    const usuarioExistente = await database.Usuario.findOne({
+      where: { email: dto.email }
     })
 
-    if (usuario) {
-      throw new Error('Usuario ja cadastrado')
+    if (usuarioExistente) {
+      throw new Error('Usuário já cadastrado')
     }
 
-    try {
-      const senhaHash = await hash(dto.senha, 8)
+    const senhaHash = await hash(dto.senha, 8)
 
-      const novoUsuario = await database.Usuario.create({
-        id: uuidv4(),
-        nome: dto.nome,
-        email: dto.email,
-        senha: senhaHash
-      })
+    const novoUsuario = await database.Usuario.create({
+      id: uuidv4(),
+      nome: dto.nome,
+      email: dto.email,
+      senha: senhaHash
+    })
 
-      return novoUsuario
-    } catch (error) {
-      throw new Error('Erro ao cadastrar usuario')
-    }
+    return novoUsuario
   }
 
   async buscarTodosUsuarios() {
-    return database.Usuario.findAll()
+    return database.usuario.findAll()
   }
 
   async buscarUsuarioPorId(id) {
@@ -41,7 +35,7 @@ class UsuarioService {
     })
 
     if (!usuario) {
-      throw new Error('Usuario informado não cadastrado!')
+      throw new Error('Usuário não encontrado')
     }
 
     return usuario
@@ -50,26 +44,19 @@ class UsuarioService {
   async editarUsuario(dto) {
     const usuario = await this.buscarUsuarioPorId(dto.id)
 
-    try {
-      usuario.nome = dto.nome
-      usuario.email = dto.email
-      await usuario.save()
-      return usuario
-    } catch (error) {
-      throw new Error('Erro ao editar usuario!')
-    }
+    usuario.nome = dto.nome
+    usuario.email = dto.email
+
+    await usuario.save()
+    return usuario
   }
 
   async deletarUsuario(id) {
     await this.buscarUsuarioPorId(id)
 
-    try {
-      await database.Usuario.destroy({
-        where: { id }
-      })
-    } catch (error) {
-      throw new Error('Erro ao tentar deletar o usuario!')
-    }
+    await database.Usuario.destroy({
+      where: { id }
+    })
   }
 }
 
