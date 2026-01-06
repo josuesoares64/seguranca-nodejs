@@ -1,100 +1,51 @@
-const { v4: uuidv4 } = require('uuid')
 const database = require('../models')
 
 class ProdutoService {
-    async cadastrarProduto(dto) {
-        const produto = await database.produtos.findOne({
-            where: {
-                nome: dto.nome
-            }
-        });
 
-        if (produto) {
-            throw new Error('Produto já cadastrado');
-        }
+  async cadastrarProduto(dto) {
+    const produto = await database.Produto.findOne({
+      where: { nome: dto.nome }
+    })
 
-        try {
-            const newProduto = await database.produtos.create({ 
-                id: uuidv4(),
-                nome: dto.nome,
-                descricao: dto.descricao,
-                preco: dto.preco
-            });
+    if (produto) throw new Error('Produto já cadastrado')
 
-            return newProduto;
-        } catch (error) {
-            console.error('Message error: ', error.message);
-            throw error;
-        }
-    }
+    const newProduto = await database.Produto.create({
+      nome: dto.nome,
+      descricao: dto.descricao,
+      preco: dto.preco
+    })
 
-    async buscarTodosProdutos() {
-        const produtos = await database.produtos.findAll()
+    return newProduto
+  }
 
-        return produtos;
-    }
+  async buscarTodosProdutos() {
+    return await database.Produto.findAll()
+  }
 
-    async buscarProdutoPorId(id) {
-        const produto = await database.produtos.findOne({
-            where: {
-                id: id
-            }
-        });
+  async buscarProdutoPorId(id) {
+    const produto = await database.Produto.findOne({ where: { id } })
+    if (!produto) throw new Error('Produto informado não cadastrado!')
+    return produto
+  }
 
-        if (!produto) {
-            throw new Error('Produto informado não cadastrado!')
-        }
+  async deletarProdutoPorId(id) {
+    const produto = await database.Produto.findOne({ where: { id } })
+    if (!produto) throw new Error('Produto informado não cadastrado!')
+    await database.Produto.destroy({ where: { id } })
+  }
 
-        return produto;
-    }
+  async editarProduto(dto) {
+    const produto = await database.Produto.findOne({ where: { id: dto.id } })
+    if (!produto) throw new Error('Produto informado não cadastrado!')
 
-    async deletarProdutoPorId(id) {
-        const produto = await database.produtos.findOne({
-            where: {
-                id: id
-            }
-        });
+    produto.nome = dto.nome
+    produto.descricao = dto.descricao
+    produto.preco = dto.preco
 
-        if (!produto) {
-            throw new Error('Produto informado não cadastrado!')
-        }
+    await produto.save()
+    return produto
+  }
 
-        try {
-            await database.produtos.destroy({
-                where: {
-                    id: id
-                }
-            });
-        } catch (error) {
-            console.error('Message error: ', error.message)
-            throw error;
-        }
-    }
-
-    async editarProduto(dto) {
-        const produto = await database.produtos.findOne({
-            where: {
-                id: dto.id
-            }
-        });
-
-        if (!produto) {
-            throw new Error('Produto informado não cadastrado!')
-        }
-
-        try {
-            produto.nome = dto.nome
-            produto.descricao = dto.descricao
-            produto.preco = dto.preco
-
-            await produto.save()
-
-            return await produto.reload()
-        } catch (error) {
-            console.error('Message error: ', error.message)
-            throw error
-        }
-    }
 }
 
 module.exports = ProdutoService
